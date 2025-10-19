@@ -8,7 +8,8 @@ from typing import Any
 from uuid import uuid4
 
 import httpx
-from a2a.client import A2ACardResolver, ClientConfig, ClientFactory
+from a2a.client import A2ACardResolver, ClientConfig, ClientFactory, ClientCallContext
+from google.adk.agents.run_config import RunConfig
 from a2a.types import Message, Task, TextPart
 
 from common.logger import get_logger
@@ -41,7 +42,7 @@ def _collect_text_parts(items: Iterable[Any]) -> list[str]:
     return collected
 
 
-async def run_orchestrator_agent(message: str) -> None:
+async def run_orchestrator_agent(message: str, max_llm_calls: int = 5) -> None:
     logger.info(f"Connecting to agent at {ORCHESTRATOR_AGENT_URL}...")
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(1200)) as httpx_client:
@@ -55,8 +56,9 @@ async def run_orchestrator_agent(message: str) -> None:
 
             request = Message(messageId=str(uuid4()), role="user", parts=[TextPart(text=message)])
 
-            # 스트리밍/논-스트리밍 모두 호환
-            result = client.send_message(request)
+            context = ClientCallContext(run_config=RunConfig(max_llm_calls=max_llm_calls))
+            result = client.send_message(request, context=context)
+            
             if inspect.isasyncgen(result):
                 # 스트리밍이면 마지막 이벤트(보통 최종 Task)를 결과로
                 last_event = None
@@ -102,6 +104,12 @@ if __name__ == "__main__":
         help="자연어 명령. 예) '지난 24시간 동안 '테슬라 OR 엔비디아' 관련 뉴스 파이프라인을 실행해줘'",
         required=True,
     )
+    p.add_argument(
+        "--max-llm-calls",
+        help="각 에이전트 내부에서 최대 LLM 호출 수. 기본값: 5",
+        type=int,
+        default=5,
+    )
     args = p.parse_args()
 
-    asyncio.run(run_orchestrator_agent(message=args.command))
+    asyncio.run(run_orchestrator_agent(message=args.command, max_llm_calls=args.max_llm_calls))
