@@ -33,8 +33,8 @@ def _build_agent_card_url(base_url: str) -> str:
     return f"{normalized}/{AGENT_CARD_WELL_KNOWN_PATH}"
 
 
-AZURE_DEPLOYMENT = settings.azure_openai_deployment
-LLM_MODEL = LiteLlm(model=f"azure/{AZURE_DEPLOYMENT}", tool_choice="auto")
+OPENAI_MODEL_NAME = settings.openai_model
+LLM_MODEL = LiteLlm(model=OPENAI_MODEL_NAME, tool_choice="auto")
 
 CRAWLER_AGENT = RemoteA2aAgent(
     name="crawler_agent",
