@@ -42,6 +42,7 @@ def crawl_news(
     Returns:
         list[dict[str, Any]]: `NewsDoc` 스키마와 호환되는 기사 리스트.
     """
+
     api_key = settings.newsapi_api_key
     if not query:
         logger.info("Query is empty; returning empty result")
@@ -50,12 +51,14 @@ def crawl_news(
         logger.info("NewsAPI key missing; returning empty result")
         return []
 
+    logger.info("Crawling news for query=%s, lookback_hours=%s, page_size=%s", query, lookback_hours, page_size)
+
     normalized_page_size = max(1, min(page_size, MAX_PAGE_SIZE))
-    published_after = datetime.now(UTC) - timedelta(hours=max(1, lookback_hours))
+    published_after = (datetime.now(UTC) - timedelta(hours=max(1, lookback_hours))).strftime("%Y-%m-%d")
 
     params = {
         "q": query,
-        "from": published_after.isoformat(timespec="seconds"),
+        "from": published_after,
         "language": "en",
         "sortBy": "publishedAt",
         "pageSize": normalized_page_size,
@@ -71,6 +74,10 @@ def crawl_news(
 
     payload = response.json()
     articles = payload.get("articles") or []
+
+    if not articles:
+        logger.info("No articles found in NewsAPI response")
+        return []
 
     documents: list[dict[str, Any]] = []
     for article in articles:
