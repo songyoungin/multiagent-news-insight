@@ -46,34 +46,21 @@ PARSER_AGENT = RemoteA2aAgent(
     description="Extract readable article text from HTML documents.",
     agent_card=_build_agent_card_url(settings.parser_agent_public_host, settings.parser_agent_public_port),
 )
-CLUSTER_AGENT = RemoteA2aAgent(
-    name="cluster_agent",
-    description="Cluster financial news documents into coherent themes.",
-    agent_card=_build_agent_card_url(settings.cluster_agent_public_host, settings.cluster_agent_public_port),
-)
 SENTIMENT_AGENT = RemoteA2aAgent(
     name="sentiment_agent",
-    description="Compute sentiment and relevance scores for each cluster.",
+    description="Compute sentiment and relevance scores for each article.",
     agent_card=_build_agent_card_url(settings.sentiment_agent_public_host, settings.sentiment_agent_public_port),
 )
 INSIGHT_AGENT = RemoteA2aAgent(
     name="insight_agent",
-    description="Generate actionable insights grounded in clustered documents.",
+    description="Generate actionable insights from sentiment analysis results.",
     agent_card=_build_agent_card_url(settings.insight_agent_public_host, settings.insight_agent_public_port),
 )
 
 CRAWLER_AGENT_TOOL = AgentTool(CRAWLER_AGENT)
-# PARSER_AGENT_TOOL = AgentTool(PARSER_AGENT)
-# CLUSTER_SENTIMENT_PARALLEL_AGENT = ParallelAgent(
-#     name="analysis_parallel_agent",
-#     description="Run clustering and sentiment extraction in parallel for efficiency.",
-#     sub_agents=[
-#         CLUSTER_AGENT,
-#         SENTIMENT_AGENT,
-#     ],
-# )
-# CLUSTER_SENTIMENT_TOOL = AgentTool(CLUSTER_SENTIMENT_PARALLEL_AGENT)
-# INSIGHT_AGENT_TOOL = AgentTool(INSIGHT_AGENT)
+PARSER_AGENT_TOOL = AgentTool(PARSER_AGENT)
+SENTIMENT_AGENT_TOOL = AgentTool(SENTIMENT_AGENT)
+INSIGHT_AGENT_TOOL = AgentTool(INSIGHT_AGENT)
 
 instrument_langfuse()
 
@@ -85,9 +72,9 @@ except RuntimeError as exc:
 
 TOOLING = [
     CRAWLER_AGENT_TOOL,
-    # PARSER_AGENT_TOOL,
-    # CLUSTER_SENTIMENT_TOOL,
-    # INSIGHT_AGENT_TOOL,
+    PARSER_AGENT_TOOL,
+    SENTIMENT_AGENT_TOOL,
+    INSIGHT_AGENT_TOOL,
 ]
 if DEDUPE_TOOL is not None:
     TOOLING.insert(2, DEDUPE_TOOL)

@@ -36,17 +36,13 @@ class AppSettings(BaseSettings):
     parser_agent_public_host: str = "0.0.0.0"
     parser_agent_public_port: int = 8202
 
-    # 클러스터 에이전트 공개 호스트 및 포트 정보
-    cluster_agent_public_host: str = "0.0.0.0"
-    cluster_agent_public_port: int = 8203
-
     # 감정 에이전트 공개 호스트 및 포트 정보
     sentiment_agent_public_host: str = "0.0.0.0"
-    sentiment_agent_public_port: int = 8204
+    sentiment_agent_public_port: int = 8203
 
     # 인사이트 에이전트 공개 호스트 및 포트 정보
     insight_agent_public_host: str = "0.0.0.0"
-    insight_agent_public_port: int = 8205
+    insight_agent_public_port: int = 8204
 
     # NewsAPI 인증 키
     newsapi_api_key: str | None = None

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/serena/Documents/development/private/multiagent-news-insight -type f ( -name \"test_*.py\" -o -name \"*_test.py\" -o -name \"pytest.ini\" -o -name \".cursorrules\" -o -path \"*/.cursor/rules/*\" -o -path \"*/.github/copilot-instructions.md\" ))",
+      "Bash(xargs ls -la)",
+      "Bash(cat /Users/serena/Documents/development/private/multiagent-news-insight/pyproject.toml)",
+      "Bash(uv sync)",
+      "Bash(curl -s http://localhost:8202/health)",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s http://localhost:8202/.well-known/agent-card.json)",
+      "Bash(cat /Users/serena/Documents/development/private/multiagent-news-insight/agents/sentiment_agent/__init__.py)",
+      "Bash(curl -s http://localhost:8204/health)",
+      "Bash(curl -s http://localhost:8204/.well-known/agent-card.json)",
+      "Bash(lsof -i :8202 -i :8203 -i :8204)",
+      "Bash(kill 56889 63073)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

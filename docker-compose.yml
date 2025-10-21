@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orchestrator-agent
+    command: python -m agents.orchestrator_agent.orchestrator_server
+    ports:
+      - "8200:8200"
+    environment:
+      - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NEWSAPI_API_KEY=${NEWSAPI_API_KEY}
+      - ORCHESTRATOR_AGENT_PUBLIC_HOST=orchestrator
+      - ORCHESTRATOR_AGENT_PUBLIC_PORT=8200
+      - CRAWLER_AGENT_PUBLIC_HOST=crawler
+      - CRAWLER_AGENT_PUBLIC_PORT=8201
+      - PARSER_AGENT_PUBLIC_HOST=parser
+      - PARSER_AGENT_PUBLIC_PORT=8202
+      - SENTIMENT_AGENT_PUBLIC_HOST=sentiment
+      - SENTIMENT_AGENT_PUBLIC_PORT=8203
+      - INSIGHT_AGENT_PUBLIC_HOST=insight
+      - INSIGHT_AGENT_PUBLIC_PORT=8204
+      - PORT=8200
+    networks:
+      - agent-network
+    depends_on:
+      - crawler
+      - parser
+      - sentiment
+      - insight
+    restart: unless-stopped
+
+  crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crawler-agent
+    command: python -m agents.crawler_agent.crawler_server
+    ports:
+      - "8201:8201"
+    environment:
+      - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NEWSAPI_API_KEY=${NEWSAPI_API_KEY}
+      - CRAWLER_AGENT_PUBLIC_HOST=crawler
+      - CRAWLER_AGENT_PUBLIC_PORT=8201
+      - PORT=8201
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+  parser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: parser-agent
+    command: python -m agents.parser_agent.parser_server
+    ports:
+      - "8202:8202"
+    environment:
+      - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PARSER_AGENT_PUBLIC_HOST=parser
+      - PARSER_AGENT_PUBLIC_PORT=8202
+      - PORT=8202
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+  sentiment:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sentiment-agent
+    command: python -m agents.sentiment_agent.sentiment_server
+    ports:
+      - "8203:8203"
+    environment:
+      - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SENTIMENT_AGENT_PUBLIC_HOST=sentiment
+      - SENTIMENT_AGENT_PUBLIC_PORT=8203
+      - PORT=8203
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+  insight:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: insight-agent
+    command: python -m agents.insight_agent.insight_server
+    ports:
+      - "8204:8204"
+    environment:
+      - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - INSIGHT_AGENT_PUBLIC_HOST=insight
+      - INSIGHT_AGENT_PUBLIC_PORT=8204
+      - PORT=8204
+    networks:
+      - agent-network
+    restart: unless-stopped
+
+networks:
+  agent-network:
+    driver: bridge
