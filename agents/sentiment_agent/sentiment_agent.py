@@ -146,7 +146,7 @@ def analyze_sentiment(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
         results.append(
             {
-                "document": doc.model_dump(mode='json'),
+                "document": doc.model_dump(mode="json"),
                 "sentiment": sentiment_score,
                 "relevance": relevance_score,
             }

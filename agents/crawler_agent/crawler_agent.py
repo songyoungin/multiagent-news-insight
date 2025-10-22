@@ -125,7 +125,7 @@ def _article_to_document(article: dict[str, Any]) -> dict[str, Any] | None:
         logger.info("Skip article due to validation error=%s", exc)
         return None
 
-    return document.model_dump(mode='json')
+    return document.model_dump(mode="json")
 
 
 def _parse_published_at(raw_value: str) -> datetime | None:
