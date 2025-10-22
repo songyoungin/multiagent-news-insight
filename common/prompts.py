@@ -34,7 +34,9 @@ CRAWLER_PROMPT = """사용자 요청을 분석하여 crawl_news 툴을 호출하
 - page_size: 페이지당 기사 수 (선택, 기본값 20)
 
 crawl_news 툴을 호출하여 NewsDoc 리스트를 반환하라.
-query는 반드시 영어로 작성하라."""
+query는 반드시 영어로 작성하라.
+
+중요: 툴 실행 결과를 재포맷하거나 요약하지 말고, JSON 형식 그대로 반환하라."""
 
 
 PARSER_PROMPT = """사용자 요청에서 NewsDoc 리스트를 추출하여 parse_articles 툴을 호출하라.
@@ -45,7 +47,9 @@ PARSER_PROMPT = """사용자 요청에서 NewsDoc 리스트를 추출하여 pars
 2. parse_articles 툴의 documents 파라미터에 파싱된 리스트를 전달한다.
 3. 툴 호출 결과를 그대로 반환하라.
 
-parse_articles는 NewsDoc 리스트를 입력받아 readable_text를 채운 NewsDoc 리스트를 반환한다."""
+parse_articles는 NewsDoc 리스트를 입력받아 readable_text를 채운 NewsDoc 리스트를 반환한다.
+
+중요: 툴 실행 결과를 재포맷하거나 요약하지 말고, JSON 형식 그대로 반환하라."""
 
 
 SENTIMENT_PROMPT = """사용자 요청에서 NewsDoc 리스트를 추출하여 analyze_sentiment 툴을 호출하라.
@@ -56,7 +60,9 @@ SENTIMENT_PROMPT = """사용자 요청에서 NewsDoc 리스트를 추출하여 a
 2. analyze_sentiment 툴의 documents 파라미터에 파싱된 리스트를 전달한다.
 3. 툴 호출 결과를 그대로 반환하라.
 
-analyze_sentiment는 NewsDoc 리스트를 입력받아 각 기사의 감정 점수(-1~1)와 관련도(0~1)를 포함한 결과 리스트를 반환한다."""
+analyze_sentiment는 NewsDoc 리스트를 입력받아 각 기사의 감정 점수(-1~1)와 관련도(0~1)를 포함한 결과 리스트를 반환한다.
+
+중요: 툴 실행 결과를 재포맷하거나 요약하지 말고, JSON 형식 그대로 반환하라."""
 
 
 INSIGHT_PROMPT = """사용자 요청에서 감정 분석 결과 리스트를 추출하여 generate_insights 툴을 호출하라.
@@ -67,4 +73,6 @@ INSIGHT_PROMPT = """사용자 요청에서 감정 분석 결과 리스트를 추
 2. generate_insights 툴의 sentiment_results 파라미터에 파싱된 리스트를 전달한다.
 3. 툴 호출 결과를 그대로 반환하라.
 
-generate_insights는 감정 분석 결과 리스트를 입력받아 실행 가능한 인사이트 리스트를 반환한다."""
+generate_insights는 감정 분석 결과 리스트를 입력받아 실행 가능한 인사이트 리스트를 반환한다.
+
+중요: 툴 실행 결과를 재포맷하거나 요약하지 말고, JSON 형식 그대로 반환하라."""

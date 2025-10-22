@@ -52,7 +52,7 @@ def parse_articles(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
         readable_text = _extract_text_from_url(str(doc.url))
         if readable_text:
             doc.readable_text = readable_text
-            parsed_documents.append(doc.model_dump())
+            parsed_documents.append(doc.model_dump(mode='json'))
         else:
             logger.info("Skip document due to no readable text url=%s", doc.url)
 

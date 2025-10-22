@@ -115,7 +115,7 @@ def analyze_sentiment(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """뉴스 기사의 감정과 금융 관련도를 분석한다.
 
     Args:
-        documents (list[dict[str, Any]]): `NewsDoc` 스키마와 호환되는 기사 리스트.
+        documents (list[dict[str, Any]]): `NewsDoc` 스키마�� 호��되는 기사 리스트.
 
     Returns:
         list[dict[str, Any]]: 각 기사의 감정 및 관련도 정보가 포함된 결과 리스트.
@@ -146,7 +146,7 @@ def analyze_sentiment(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
         results.append(
             {
-                "document": doc.model_dump(),
+                "document": doc.model_dump(mode='json'),
                 "sentiment": sentiment_score,
                 "relevance": relevance_score,
             }

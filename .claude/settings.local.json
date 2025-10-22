@@ -12,7 +12,9 @@
       "Bash(curl -s http://localhost:8204/health)",
       "Bash(curl -s http://localhost:8204/.well-known/agent-card.json)",
       "Bash(lsof -i :8202 -i :8203 -i :8204)",
-      "Bash(kill 56889 63073)"
+      "Bash(kill 56889 63073)",
+      "Bash(docker compose:*)",
+      "Bash(python -c:*)"
     ],
     "deny": [],
     "ask": []
