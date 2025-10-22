@@ -42,6 +42,7 @@ def parse_articles(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     parsed_documents: list[dict[str, Any]] = []
     for doc_dict in documents:
+        logger.info("Parsing document=%s", doc_dict)
         try:
             doc = NewsDoc(**doc_dict)
         except ValidationError as exc:
@@ -89,7 +90,7 @@ def _extract_text_from_url(url: str) -> str | None:
 
 
 PARSER_TOOL = FunctionTool(func=parse_articles)
-PARSER_MODEL = LiteLlm(model=settings.openai_model, tool_choice="required")
+PARSER_MODEL = LiteLlm(model=settings.openai_model, tool_choice="auto")
 
 PARSER_AGENT = LlmAgent(
     name="finance_news_parser_agent",

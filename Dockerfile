@@ -9,20 +9,18 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# uv 설치
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.cargo/bin:${PATH}"
-
 # 프로젝트 파일 복사
-COPY pyproject.toml ./
+COPY pyproject.toml uv.lock ./
 COPY agents ./agents
 COPY common ./common
 COPY tools ./tools
 
-# 의존성 설치
-RUN uv venv .venv && \
-    . .venv/bin/activate && \
-    uv pip install -e .
+# uv 설치 및 의존성 설치 (한 번에 실행)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    . /root/.local/bin/env && \
+    uv sync --frozen --no-dev
+
+ENV PATH="/root/.local/bin:${PATH}"
 
 # 환경 변수 설정
 ENV PYTHONUNBUFFERED=1

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   orchestrator:
     build:
@@ -9,11 +7,15 @@ services:
     command: python -m agents.orchestrator_agent.orchestrator_server
     ports:
       - "8200:8200"
+    volumes:
+      - ./agents:/app/agents
+      - ./common:/app/common
+      - ./tools:/app/tools
     environment:
       - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - NEWSAPI_API_KEY=${NEWSAPI_API_KEY}
-      - ORCHESTRATOR_AGENT_PUBLIC_HOST=orchestrator
+      - ORCHESTRATOR_AGENT_PUBLIC_HOST=0.0.0.0
       - ORCHESTRATOR_AGENT_PUBLIC_PORT=8200
       - CRAWLER_AGENT_PUBLIC_HOST=crawler
       - CRAWLER_AGENT_PUBLIC_PORT=8201
@@ -41,6 +43,10 @@ services:
     command: python -m agents.crawler_agent.crawler_server
     ports:
       - "8201:8201"
+    volumes:
+      - ./agents:/app/agents
+      - ./common:/app/common
+      - ./tools:/app/tools
     environment:
       - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -60,6 +66,10 @@ services:
     command: python -m agents.parser_agent.parser_server
     ports:
       - "8202:8202"
+    volumes:
+      - ./agents:/app/agents
+      - ./common:/app/common
+      - ./tools:/app/tools
     environment:
       - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -78,6 +88,10 @@ services:
     command: python -m agents.sentiment_agent.sentiment_server
     ports:
       - "8203:8203"
+    volumes:
+      - ./agents:/app/agents
+      - ./common:/app/common
+      - ./tools:/app/tools
     environment:
       - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -96,6 +110,10 @@ services:
     command: python -m agents.insight_agent.insight_server
     ports:
       - "8204:8204"
+    volumes:
+      - ./agents:/app/agents
+      - ./common:/app/common
+      - ./tools:/app/tools
     environment:
       - OPENAI_MODEL=${OPENAI_MODEL:-openai/gpt-4o-mini}
       - OPENAI_API_KEY=${OPENAI_API_KEY}

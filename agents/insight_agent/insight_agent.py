@@ -202,7 +202,7 @@ def _generate_llm_summary_insight(articles: list[dict[str, Any]]) -> dict[str, A
 
 
 INSIGHT_TOOL = FunctionTool(func=generate_insights)
-INSIGHT_MODEL = LiteLlm(model=settings.openai_model, tool_choice="required")
+INSIGHT_MODEL = LiteLlm(model=settings.openai_model, tool_choice="auto")
 
 INSIGHT_AGENT = LlmAgent(
     name="finance_news_insight_agent",

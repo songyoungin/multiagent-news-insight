@@ -98,6 +98,7 @@ def _article_to_document(article: dict[str, Any]) -> dict[str, Any] | None:
     Returns:
         dict[str, Any] | None: 변환된 기사. 필수 필드가 없으면 None.
     """
+    logger.info("Converting article to document=%s", article)
     url = article.get("url")
     title = article.get("title")
     publisher = _extract_publisher(article)
@@ -169,7 +170,7 @@ def _extract_publisher(article: dict[str, Any]) -> str | None:
 
 
 CRAWLER_TOOL = FunctionTool(func=crawl_news)
-CRAWLER_MODEL = LiteLlm(model=settings.openai_model, tool_choice="required")
+CRAWLER_MODEL = LiteLlm(model=settings.openai_model, tool_choice="auto")
 
 CRAWLER_AGENT = LlmAgent(
     name="finance_news_crawler_agent",

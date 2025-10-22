@@ -203,7 +203,7 @@ def _calculate_relevance(text: str) -> float:
 
 
 SENTIMENT_TOOL = FunctionTool(func=analyze_sentiment)
-SENTIMENT_MODEL = LiteLlm(model=settings.openai_model, tool_choice="required")
+SENTIMENT_MODEL = LiteLlm(model=settings.openai_model, tool_choice="auto")
 
 SENTIMENT_AGENT = LlmAgent(
     name="finance_news_sentiment_agent",
