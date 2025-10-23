@@ -67,6 +67,8 @@ async def run_orchestrator_agent(message: str, max_llm_calls: int = 5) -> None:
                 # 스트리밍이면 각 이벤트를 실시간으로 출력
                 last_event = None
                 event_count = 0
+                previous_history_length = 0
+
                 async for ev in result:
                     event_count += 1
                     last_event = ev
@@ -74,106 +76,31 @@ async def run_orchestrator_agent(message: str, max_llm_calls: int = 5) -> None:
                     # 튜플이면 첫 번째 요소가 Task
                     task_event = ev[0] if isinstance(ev, (tuple, list)) else ev
 
-                    # 이벤트 타입 확인
-                    logger.info(f"\n📦 Event #{event_count}: type={type(task_event).__name__}")
-
-                    # Task 객체인 경우
+                    # 새로 추가된 메시지만 출력
                     if hasattr(task_event, "history"):
-                        history = getattr(task_event, "history", [])
-                        if history:
-                            history_list = list(history)
-                            logger.info(f"   📜 History length: {len(history_list)}")
+                        history = list(getattr(task_event, "history", []))
+                        current_history_length = len(history)
 
-                            if history_list:
-                                last_msg = history_list[-1]
+                        # 새로 추가된 메시지만 출력
+                        if current_history_length > previous_history_length:
+                            new_messages = history[previous_history_length:]
 
-                                # 메시지 구조 디버깅
-                                logger.info(f"   🔍 Last message type: {type(last_msg).__name__}")
-                                logger.info(f"   🔍 Last message role: {getattr(last_msg, 'role', 'N/A')}")
+                            for i, msg in enumerate(new_messages):
+                                logger.info("=" * 80)
+                                logger.info(f"📦 Event #{event_count} - New Message #{i + 1}")
+                                logger.info("=" * 80)
+                                logger.info(f"{msg}")
+                                logger.info("=" * 80)
 
-                                # parts 직접 확인
-                                parts = getattr(last_msg, "parts", None)
-                                if parts:
-                                    logger.info(f"   🔍 Parts type: {type(parts).__name__}")
-                                    parts_list = list(parts) if parts else []
-                                    logger.info(f"   🔍 Parts count: {len(parts_list)}")
+                            previous_history_length = current_history_length
 
-                                    # 각 part 확인
-                                    for i, part in enumerate(parts_list):
-                                        logger.info(f"   🔍 Part #{i} type: {type(part).__name__}")
-
-                                        # Part 객체의 모든 속성 출력
-                                        logger.info(f"   📋 Part #{i} dir(): {dir(part)}")
-
-                                        # __dict__ 확인
-                                        if hasattr(part, "__dict__"):
-                                            logger.info(f"   📋 Part #{i} __dict__: {part.__dict__}")
-
-                                        # vars() 확인
-                                        try:
-                                            logger.info(f"   📋 Part #{i} vars(): {vars(part)}")
-                                        except TypeError:
-                                            logger.info(f"   📋 Part #{i} vars(): Not available")
-
-                                        # repr 확인
-                                        logger.info(f"   📋 Part #{i} repr: {repr(part)}")
-
-                                        # str 확인
-                                        logger.info(f"   📋 Part #{i} str: {str(part)}")
-
-                                        # TextPart 확인
-                                        if hasattr(part, "text"):
-                                            text = getattr(part, "text", None)
-                                            if text:
-                                                preview = text[:300] if len(text) > 300 else text
-                                                logger.info(f"   💬 Part #{i} text preview:\n{preview}...")
-
-                                                # JSON 배열인지 확인
-                                                if text.strip().startswith("["):
-                                                    logger.info(f"   ✅ Part #{i} looks like JSON array response")
-
-                                        # root 속성 확인 (원래 로직)
-                                        root = getattr(part, "root", None)
-                                        if root:
-                                            logger.info(f"   📋 Part #{i} root type: {type(root).__name__}")
-                                            logger.info(f"   📋 Part #{i} root dir(): {dir(root)}")
-                                            if hasattr(root, "__dict__"):
-                                                logger.info(f"   📋 Part #{i} root.__dict__: {root.__dict__}")
-
-                                            if hasattr(root, "text"):
-                                                text = getattr(root, "text", None)
-                                                if text:
-                                                    preview = text[:300] if len(text) > 300 else text
-                                                    logger.info(f"   💬 Part #{i} root.text preview:\n{preview}...")
-                                else:
-                                    logger.info(f"   ⚠️ No parts found in message")
-
-                    # Artifact 확인
-                    if hasattr(task_event, "artifacts"):
-                        artifacts = getattr(task_event, "artifacts", None)
-                        if artifacts is not None:
-                            try:
-                                artifacts_list = list(artifacts)
-                                if artifacts_list:
-                                    logger.info(f"   📎 Artifacts count: {len(artifacts_list)}")
-                            except TypeError:
-                                pass  # artifacts가 iterable하지 않은 경우
-
-                    # State 확인 (진행 상태)
-                    if hasattr(task_event, "state"):
-                        state = getattr(task_event, "state", None)
-                        if state:
-                            logger.info(f"   🔵 Task state: {state}")
-
-                logger.info("=" * 80)
-                logger.info(f"✅ Streaming completed: {event_count} events received")
-                logger.info("=" * 80)
                 task_or_tuple = last_event
             else:
                 task_or_tuple = await result
 
             # (Task, None) 같은 튜플이면 첫 요소 사용
             task: Task = task_or_tuple[0] if isinstance(task_or_tuple, (tuple, list)) else task_or_tuple
+            logger.info(f"task={task}")
 
             final_text = None
             artifacts_attr = getattr(task, "artifacts", None)
