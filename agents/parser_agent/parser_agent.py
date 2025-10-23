@@ -42,7 +42,6 @@ def parse_articles(documents: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     parsed_documents: list[dict[str, Any]] = []
     for doc_dict in documents:
-        logger.info("Parsing document=%s", doc_dict)
         try:
             doc = NewsDoc(**doc_dict)
         except ValidationError as exc:

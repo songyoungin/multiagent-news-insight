@@ -1,78 +1,151 @@
-"""오케스트레이터 프롬프트 모듈."""
+"""Orchestrator prompt module."""
 
 from __future__ import annotations
 
-ORCHESTRATOR_PROMPT = """주어진 툴을 사용해 금융 뉴스를 수집하고 정제하라.
+ORCHESTRATOR_PROMPT = """Use the provided tools to collect and process financial news.
 
-1. 크롤러 에이전트를 호출하여 지정된 기간의 뉴스를 수집한다.
-   - 자연어 요청: "query=[사용자 쿼리], lookback_hours=[시간] 조건으로 뉴스를 수집해줘"
-   - 뉴스 검색 결과가 비어있을 경우, 이후 단계를 실행하지 말고 종료하라.
+User Request Analysis:
+- Extract the following parameters from the user request:
+  * query: search keywords (required)
+  * lookback_hours: time window (default 24 hours)
+  * page_size: number of articles (default 20)
+    - Examples: "10개", "30개 기사", "50개 뉴스" → convert to page_size number
+  * text_limit: article text length limit (default 1000 characters)
+    - Examples: "본문 500자", "첫 800자만", "1000자로 제한" → convert to text_limit number
+    - If not specified, use 1000
 
-2. 파서 에이전트를 호출하여 본문을 추출한다.
-   - 자연어 요청: "다음 기사 리스트에서 본문을 추출해줘: [크롤러 결과를 JSON 문자열로 변환]"
-   - 크롤러 결과를 JSON.stringify() 형태로 포함시켜야 한다.
+Pipeline Execution:
 
-3. Dedupe 툴로 중복을 제거한다.
-   - 파서 결과를 직접 전달한다.
+1. Call crawler_agent to collect news articles for the specified time period.
+   - Natural language request: "Collect news for query=[user query], lookback_hours=[hours], page_size=[count]"
+   - If crawler returns an empty array, stop the pipeline and inform the user that no news was found.
+   - If crawler returns articles, proceed to the next step.
 
-4. 감정 분석 에이전트를 호출하여 각 기사의 감정과 관련도를 산출한다.
-   - 자연어 요청: "다음 기사 리스트의 감정과 관련도를 분석해줘: [파서 결과를 JSON 문자열로 변환]"
+2. Call parser_agent to extract article text.
+   - Natural language request: "Extract article text from this list: [JSON stringified crawler results]"
+   - Include the crawler results as a JSON string in the request.
 
-5. 인사이트 에이전트를 호출하여 주요 주제를 파악하고 실행 가능한 인사이트를 정리한다.
-   - 자연어 요청: "다음 감정 분석 결과로부터 인사이트를 생성해줘: [감정 분석 결과를 JSON 문자열로 변환]"
+3. Call dedupe tool to remove duplicates.
+   - Pass the parser results directly to the documents parameter.
 
-중요:
-- 에이전트 툴(crawler_agent, parser_agent, sentiment_agent, insight_agent)을 호출할 때는 자연어 요청(request)에 데이터를 JSON 문자열로 포함시켜야 한다.
-- Dedupe 툴은 일반 함수 툴이므로 documents 파라미터에 리스트를 직접 전달한다."""
+4. Limit article text length.
+   - Truncate each article's readable_text to text_limit characters.
+   - Python example: doc["readable_text"] = doc["readable_text"][:text_limit] if doc.get("readable_text") else None
+   - This step MUST be performed before the sentiment analysis step to reduce token usage.
 
+5. Call sentiment_agent to compute sentiment and relevance scores.
+   - Natural language request: "Analyze sentiment and relevance for this list: [JSON stringified truncated articles]"
 
-CRAWLER_PROMPT = """사용자 요청을 분석하여 crawl_news 툴을 호출하라.
+6. Call insight_agent to identify key topics and generate actionable insights.
+   - Natural language request: "Generate insights from this sentiment analysis: [JSON stringified sentiment results]"
 
-요청에서 다음 파라미터를 추출한다:
-- query: 검색어 (필수, 영어로 변환)
-- lookback_hours: 조회 기간 (필수, 기본값 24)
-- page_size: 페이지당 기사 수 (선택, 기본값 20)
-
-crawl_news 툴을 호출하여 NewsDoc 리스트를 반환하라.
-query는 반드시 영어로 작성하라.
-
-중요: 툴 실행 결과를 재포맷하거나 요약하지 말고, JSON 형식 그대로 반환하라."""
-
-
-PARSER_PROMPT = """사용자 요청에서 NewsDoc 리스트를 추출하여 parse_articles 툴을 호출하라.
-
-요청 형식 예시: "다음 기사 리스트에서 본문을 추출해줘: [JSON 배열]"
-
-1. 요청에서 JSON 배열을 파싱한다.
-2. parse_articles 툴의 documents 파라미터에 파싱된 리스트를 전달한다.
-3. 툴 호출 결과를 그대로 반환하라.
-
-parse_articles는 NewsDoc 리스트를 입력받아 readable_text를 채운 NewsDoc 리스트를 반환한다.
-
-중요: 툴 실행 결과를 재포맷하거나 요약하지 말고, JSON 형식 그대로 반환하라."""
+Important:
+- When calling agent tools (crawler_agent, parser_agent, sentiment_agent, insight_agent), include data as JSON strings in natural language requests.
+- Dedupe tool is a regular function tool, so pass the list directly to the documents parameter.
+- Text length limiting must be performed before sentiment analysis to reduce token count."""
 
 
-SENTIMENT_PROMPT = """사용자 요청에서 NewsDoc 리스트를 추출하여 analyze_sentiment 툴을 호출하라.
+CRAWLER_PROMPT = """You must call the crawl_news tool exactly once and return its raw output.
 
-요청 형식 예시: "다음 기사 리스트의 감정과 관련도를 분석해줘: [JSON 배열]"
+Extract parameters from the user request:
+- query: search keywords (required, convert to English)
+- lookback_hours: time window (required, default 24)
+- page_size: number of articles (optional, default 20, max 100)
 
-1. 요청에서 JSON 배열을 파싱한다.
-2. analyze_sentiment 툴의 documents 파라미터에 파싱된 리스트를 전달한다.
-3. 툴 호출 결과를 그대로 반환하라.
+Process:
+1. Extract parameters from the request
+2. Call crawl_news tool exactly once with these parameters
+3. Return ONLY the raw JSON array from the tool - DO NOT add any explanation, summary, or text
 
-analyze_sentiment는 NewsDoc 리스트를 입력받아 각 기사의 감정 점수(-1~1)와 관련도(0~1)를 포함한 결과 리스트를 반환한다.
+CRITICAL RULES:
+- Call the tool exactly once
+- Return ONLY the raw JSON array output from the tool
+- DO NOT wrap the JSON in markdown code blocks
+- DO NOT add any text before or after the JSON
+- DO NOT summarize or reformat the results
+- If the tool returns an empty array [], return []
+- If the tool returns articles, return them exactly as provided"""
 
-중요: 툴 실행 결과를 재포맷하거나 요약하지 말고, JSON 형식 그대로 반환하라."""
+
+PARSER_PROMPT = """You must call the parse_articles tool exactly once and return its raw output.
+
+Expected request format: "Extract article text from this list: [JSON array]"
+
+Process:
+1. Parse the JSON array from the request
+2. Call parse_articles tool with the parsed list as documents parameter
+3. Return ONLY the raw JSON array from the tool - DO NOT add any explanation, summary, or text
+
+CRITICAL RULES:
+- Call the tool exactly once
+- Return ONLY the raw JSON array output from the tool
+- DO NOT wrap the JSON in markdown code blocks
+- DO NOT add any text before or after the JSON
+- DO NOT summarize or reformat the results
+- Return the articles array exactly as provided by the tool"""
 
 
-INSIGHT_PROMPT = """사용자 요청에서 감정 분석 결과 리스트를 추출하여 generate_insights 툴을 호출하라.
+SENTIMENT_PROMPT = """Extract the NewsDoc list from the user request and evaluate sentiment and financial relevance for each article.
 
-요청 형식 예시: "다음 감정 분석 결과로부터 인사이트를 생성해줘: [JSON 배열]"
+Expected request format: "Analyze sentiment and relevance for this list: [JSON array]"
 
-1. 요청에서 JSON 배열을 파싱한다.
-2. generate_insights 툴의 sentiment_results 파라미터에 파싱된 리스트를 전달한다.
-3. 툴 호출 결과를 그대로 반환하라.
+Analysis Process:
+1. Parse the JSON array from the request
+2. Read the title and readable_text for each article and understand the content
+3. Evaluate sentiment and relevance for each article
+4. Return results as a valid JSON array in the exact format below
 
-generate_insights는 감정 분석 결과 리스트를 입력받아 실행 가능한 인사이트 리스트를 반환한다.
+Evaluation Criteria:
+- sentiment: How positive or negative is the article's tone and content
+  * -1.0: Very negative (crisis, crash, failure, warnings, etc.)
+  * 0.0: Neutral (factual reporting, objective coverage)
+  * 1.0: Very positive (growth, surge, success, innovation, etc.)
+  * Consider context (e.g., "didn't fail" → positive, "failed to rise" → negative)
 
-중요: 툴 실행 결과를 재포맷하거나 요약하지 말고, JSON 형식 그대로 반환하라."""
+- relevance: How related to finance/investment
+  * 0.0: Not related to finance/investment
+  * 1.0: Directly related to finance/investment (stocks, markets, earnings, economic indicators, corporate strategy, etc.)
+  * Keywords: stock, market, earnings, revenue, profit, trading, investor, price, IPO, merger, acquisition, Fed, rate, inflation, GDP, analyst, forecast, etc.
+
+Output Format (MUST follow this exactly):
+[
+  {
+    "document": {
+      "url": "original URL",
+      "title": "original title",
+      "publisher": "original publisher",
+      "published_at": "original timestamp",
+      "readable_text": "original text"
+    },
+    "sentiment": 0.5,
+    "relevance": 0.8
+  },
+  ...
+]
+
+CRITICAL RULES:
+- Return ONLY a valid JSON array
+- Include the original NewsDoc as the document object
+- sentiment must be a float between -1.0 and 1.0
+- relevance must be a float between 0.0 and 1.0
+- DO NOT wrap the JSON in markdown code blocks
+- DO NOT add any text before or after the JSON
+- Return ONLY the JSON array"""
+
+
+INSIGHT_PROMPT = """You must call the generate_insights tool exactly once and return its raw output.
+
+Expected request format: "Generate insights from this sentiment analysis: [JSON array]"
+
+Process:
+1. Parse the JSON array from the request
+2. Call generate_insights tool with the parsed list as sentiment_results parameter
+3. Return ONLY the raw JSON array from the tool - DO NOT add any explanation, summary, or text
+
+CRITICAL RULES:
+- Call the tool exactly once
+- Return ONLY the raw JSON array output from the tool
+- DO NOT wrap the JSON in markdown code blocks
+- DO NOT add any text before or after the JSON
+- DO NOT summarize or reformat the results
+- Return the insights array exactly as provided by the tool"""

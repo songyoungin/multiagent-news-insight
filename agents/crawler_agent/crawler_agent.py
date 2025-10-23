@@ -60,7 +60,7 @@ def crawl_news(
         "q": query,
         "from": published_after,
         "language": "en",
-        "sortBy": "publishedAt",
+        "sortBy": "relevancy",
         "pageSize": normalized_page_size,
     }
     headers = {"X-Api-Key": api_key}
@@ -98,7 +98,6 @@ def _article_to_document(article: dict[str, Any]) -> dict[str, Any] | None:
     Returns:
         dict[str, Any] | None: 변환된 기사. 필수 필드가 없으면 None.
     """
-    logger.info("Converting article to document=%s", article)
     url = article.get("url")
     title = article.get("title")
     publisher = _extract_publisher(article)
